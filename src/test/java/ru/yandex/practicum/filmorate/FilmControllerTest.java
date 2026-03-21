@@ -55,68 +55,6 @@ public class FilmControllerTest {
         assertThrows(RuntimeException.class, () -> controller.updateFilm(film));
     }
 
-    // фильм с пустым именем
-    @Test
-    void shouldThrowExceptionWhenFilmNameIsBlank() {
-        FilmController controller = new FilmController();
-
-        Film film = new Film();
-        film.setName("");
-        film.setDescription("Description");
-        film.setDuration(100);
-        film.setReleaseDate(LocalDate.of(2000, 1, 1));
-
-        ValidationException exception = assertThrows(ValidationException.class, () -> controller.postFilm(film));
-        assertTrue(exception.getMessage().contains("Название") || exception.getMessage().contains("name") || exception.getMessage().contains("Name"));
-    }
-
-    // фильм с длинным описанием
-    @Test
-    void shouldThrowExceptionWhenDescriptionIsTooLong() {
-        FilmController controller = new FilmController();
-
-        Film film = new Film();
-        film.setName("Valid film");
-        film.setDescription("a".repeat(201));
-        film.setDuration(100);
-        film.setReleaseDate(LocalDate.of(2000, 1, 1));
-
-        ValidationException exception = assertThrows(ValidationException.class, () -> controller.postFilm(film));
-        assertTrue(exception.getMessage().contains("Длина") || exception.getMessage().contains("200"));
-    }
-
-    // продолжительность = 0
-    @Test
-    void shouldThrowExceptionWhenDurationIsZero() {
-        FilmController controller = new FilmController();
-
-        Film film = new Film();
-        film.setName("Valid film");
-        film.setDescription("Description");
-        film.setDuration(0);
-        film.setReleaseDate(LocalDate.of(2000, 1, 1));
-
-        ValidationException exception = assertThrows(ValidationException.class, () -> controller.postFilm(film));
-        assertTrue(exception.getMessage().contains("Продолжительность") ||
-                exception.getMessage().contains("полож"));
-    }
-
-    // продолжительность < 0
-    @Test
-    void shouldThrowExceptionWhenDurationIsNegative() {
-        FilmController controller = new FilmController();
-
-        Film film = new Film();
-        film.setName("Valid film");
-        film.setDescription("Description");
-        film.setDuration(-5);
-        film.setReleaseDate(LocalDate.of(2000, 1, 1));
-
-        ValidationException exception = assertThrows(ValidationException.class, () -> controller.postFilm(film));
-        assertTrue(exception.getMessage().contains("Продолжительность") ||
-                exception.getMessage().contains("полож"));
-    }
-
 }
 
 

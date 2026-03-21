@@ -7,7 +7,6 @@ import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 
-import java.time.LocalDate;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -28,7 +27,7 @@ public class UserController {
     @PostMapping
     public User postUser(@Valid @RequestBody User user) {
         log.info("Получен запрос на создание пользователя: {}", user);
-        validate(user);
+
         fillNameIsBlank(user);
         checkEmailDuplication(user);
         user.setId(getNextId());
@@ -40,7 +39,7 @@ public class UserController {
     @PutMapping
     public User updateUser(@Valid @RequestBody User user) {
 
-        validate(user);
+        checkEmailDuplication(user);
         fillNameIsBlank(user);
 
         if (user.getId() == null) {
@@ -49,14 +48,8 @@ public class UserController {
         }
 
         if (!users.containsKey(user.getId())) {
-            log.warn("Пользователь не найден id = {}", user.getId());
-            throw new NotFoundException("Пользователь не найден");
-        }
-
-        if (users.values().stream()
-                .anyMatch(u -> u.getEmail().equals(user.getEmail()) && !u.getId().equals(user.getId()))) {
-            log.warn("Ошибка валидации Email на дубликаты: {}", user.getEmail());
-            throw new ValidationException("Этот Email уже используется");
+            log.warn("Пользователь не найден, id = {}", user.getId());
+            throw new NotFoundException("Пользователь не найден, id = " + user.getId());
         }
 
         users.put(user.getId(), user);
@@ -71,25 +64,12 @@ public class UserController {
     }
 
     private void checkEmailDuplication(User user) {
-        if (users.values().stream()
-                .anyMatch(u -> u.getEmail().equals(user.getEmail()))) {
-            log.warn("Ошибка валидации Email на дубликаты: {}", user.getEmail());
-            throw new ValidationException("Этот имейл уже используется");
-        }
-    }
+        boolean emailExists = users.values().stream()
+                .anyMatch(u -> u.getEmail().equals(user.getEmail())
+                        && (user.getId() == null || !u.getId().equals(user.getId())));
 
-    private void validate(User user) {
-        if (user.getEmail() == null || user.getEmail().isBlank() || !user.getEmail().contains("@")) {
-            log.warn("Ошибка валидации email: {}", user.getEmail());
-            throw new ValidationException("Email некорректен");
-        }
-        if (user.getLogin() == null || user.getLogin().isBlank() || user.getLogin().contains(" ")) {
-            log.warn("Ошибка валидации login: {}", user.getLogin());
-            throw new ValidationException("Login некорректен");
-        }
-        if (user.getBirthday() != null && user.getBirthday().isAfter(LocalDate.now())) {
-            log.warn("Ошибка валидации birthday: {}", user.getBirthday());
-            throw new ValidationException("Дата рождения не может быть в будущем");
+        if (emailExists) {
+            throw new ValidationException("Этот Email уже используется");
         }
     }
 

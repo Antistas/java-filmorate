@@ -65,51 +65,6 @@ class UserControllerTest {
         assertThrows(NotFoundException.class, () -> controller.updateUser(user));
     }
 
-    // Исключение когда емейл пустой
-    @Test
-    void shouldThrowExceptionWhenEmailIsBlank() {
-        UserController controller = new UserController();
-
-        User user = new User();
-        user.setEmail("");
-        user.setLogin("rustam");
-        user.setName("Rustam");
-        user.setBirthday(LocalDate.of(1990, 1, 1));
-
-        ValidationException exception = assertThrows(ValidationException.class, () -> controller.postUser(user));
-        assertTrue(exception.getMessage().contains("Email") || exception.getMessage().contains("email"));
-    }
-
-    // логин содержит пробелы
-    @Test
-    void shouldThrowExceptionWhenLoginContainsSpaces() {
-        UserController controller = new UserController();
-
-        User user = new User();
-        user.setEmail("rustam@mail.com");
-        user.setLogin("ru stam");
-        user.setName("Rustam");
-        user.setBirthday(LocalDate.of(1990, 1, 1));
-
-        ValidationException exception = assertThrows(ValidationException.class, () -> controller.postUser(user));
-        assertTrue(exception.getMessage().contains("Login"));
-    }
-
-    // Дата рождения в будущем
-    @Test
-    void shouldThrowExceptionWhenBirthdayIsInFuture() {
-        UserController controller = new UserController();
-
-        User user = new User();
-        user.setEmail("rustam@mail.com");
-        user.setLogin("rustam");
-        user.setName("Rustam");
-        user.setBirthday(LocalDate.now().plusDays(1));
-
-        ValidationException exception = assertThrows(ValidationException.class, () -> controller.postUser(user));
-        assertTrue(exception.getMessage().contains("будущем"));
-    }
-
     // второй пользователь вписывает существующий емейл
     @Test
     void shouldThrowExceptionWhenUpdatingUserWithDuplicateEmail() {
