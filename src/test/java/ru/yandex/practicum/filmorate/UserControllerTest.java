@@ -5,6 +5,9 @@ import ru.yandex.practicum.filmorate.controller.UserController;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.service.UserService;
+import ru.yandex.practicum.filmorate.storage.InMemoryUserStorage;
+import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.time.LocalDate;
 
@@ -12,10 +15,16 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class UserControllerTest {
 
+    private UserController createController() {
+        UserStorage userStorage = new InMemoryUserStorage();
+        UserService userService = new UserService(userStorage);
+        return new UserController(userStorage, userService);
+    }
+
     // пользователь добавляется с пустым именем
     @Test
     void shouldSetLoginAsNameWhenNameIsBlank() {
-        UserController controller = new UserController();
+        UserController controller = createController();
 
         User user = new User();
         user.setEmail("rustam@mail.com");
@@ -32,7 +41,7 @@ class UserControllerTest {
     // исключение при добавлении пользователя с таким же емейлом
     @Test
     void shouldThrowExceptionWhenEmailAlreadyExistsOnCreate() {
-        UserController controller = new UserController();
+        UserController controller = createController();
 
         User firstUser = new User();
         firstUser.setEmail("rustam@mail.com");
@@ -53,7 +62,7 @@ class UserControllerTest {
     // обновляем несуществующего пользователя
     @Test
     void shouldThrowExceptionWhenUpdatingUnknownUser() {
-        UserController controller = new UserController();
+        UserController controller = createController();
 
         User user = new User();
         user.setId(666L);
@@ -68,7 +77,7 @@ class UserControllerTest {
     // второй пользователь вписывает существующий емейл
     @Test
     void shouldThrowExceptionWhenUpdatingUserWithDuplicateEmail() {
-        UserController controller = new UserController();
+        UserController controller = createController();
 
         User firstUser = new User();
         firstUser.setEmail("first@mail.com");
