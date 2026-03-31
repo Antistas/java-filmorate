@@ -4,11 +4,9 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
-import ru.yandex.practicum.filmorate.storage.FilmStorage;
 
 import java.time.LocalDate;
 import java.util.Collection;
@@ -22,20 +20,19 @@ public class FilmController {
 
     private static final LocalDate CINEMA_BIRTHDAY = LocalDate.of(1895, 12, 28);
 
-    private final FilmStorage filmStorage;
     private final FilmService filmService;
 
     @GetMapping
     public Collection<Film> getFilms() {
         log.info("Запрошен список фильмов.");
-        return filmStorage.findAll();
+        return filmService.findAll();
     }
 
     @PostMapping
     public Film postFilm(@Valid @RequestBody Film film) {
         log.info("Получен запрос на создание фильма: {}", film);
         validate(film);
-        Film createdFilm = filmStorage.create(film);
+        Film createdFilm = filmService.create(film);
         log.info("Создан фильм {}", createdFilm);
         return createdFilm;
     }
@@ -43,16 +40,8 @@ public class FilmController {
     @PutMapping
     public Film updateFilm(@Valid @RequestBody Film film) {
         log.info("Получен запрос на обновление фильма: {}", film);
-        if (film.getId() == null) {
-            log.warn("Передан пустой ID {}", film.getId());
-            throw new ValidationException("Id должен быть указан");
-        }
-        if (filmStorage.findById(film.getId()) == null) {
-            log.warn("Фильм не найден,  id = {}", film.getId());
-            throw new NotFoundException("Фильм не найден, id = " + film.getId());
-        }
         validate(film);
-        filmStorage.update(film);
+        filmService.update(film);
         log.info("Обновлён фильм {}", film);
         return film;
     }
