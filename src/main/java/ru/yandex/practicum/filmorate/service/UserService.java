@@ -5,11 +5,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.model.FriendshipStatus;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Slf4j
@@ -50,15 +52,21 @@ public class UserService {
         User user = getUserOrThrow(userId);
         User friend = getUserOrThrow(friendId);
 
-        user.getFriends().add(friendId);
-        friend.getFriends().add(userId);
+        if (friend.getFriends().containsKey(userId)) {
+            user.getFriends().put(friendId, FriendshipStatus.CONFIRMED);
+            friend.getFriends().put(userId, FriendshipStatus.CONFIRMED);
+        } else {
+            user.getFriends().put(friendId, FriendshipStatus.UNCONFIRMED);
+        }
     }
 
     public List<User> getFriends(Long userId) {
-        return getUserOrThrow(userId).getFriends()
+        return getUserOrThrow(userId).getFriends().entrySet()
                 .stream()
-                .map(userStorage::findById)
-                .flatMap(Optional::stream)
+                .filter(entry -> entry.getValue() == FriendshipStatus.CONFIRMED)
+                .map(Map.Entry::getKey)
+                .map(id -> userStorage.findById(id)
+                        .orElseThrow(() -> new NotFoundException("Пользователь не найден, id = " + id)))
                 .toList();
     }
 
@@ -83,10 +91,13 @@ public class UserService {
         User user = getUserOrThrow(userId);
         User otherUser = getUserOrThrow(otherId);
 
-        return user.getFriends().stream()
-                .filter(otherUser.getFriends()::contains)
-                .map(userStorage::findById)
-                .flatMap(Optional::stream)
+        return user.getFriends().entrySet()
+                .stream()
+                .filter(entry -> entry.getValue() == FriendshipStatus.CONFIRMED)
+                .map(Map.Entry::getKey)
+                .filter(friendId -> otherUser.getFriends().get(friendId) == FriendshipStatus.CONFIRMED)
+                .map(id -> userStorage.findById(id)
+                        .orElseThrow(() -> new NotFoundException("Пользователь не найден, id = " + id)))
                 .toList();
     }
 
