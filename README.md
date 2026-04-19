@@ -49,8 +49,11 @@ erDiagram
     }
 
     MPA_RATING ||--o{ FILM : rates
+    FILM ||--o{ FILM_GENRE : has
+    GENRE ||--o{ FILM_GENRE : used_in
     USER ||--o{ FILM_LIKE : puts
     FILM ||--o{ FILM_LIKE : receives
     USER ||--o{ FRIENDSHIP : initiates
     USER ||--o{ FRIENDSHIP : receives
+
 ```
