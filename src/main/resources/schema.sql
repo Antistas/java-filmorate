@@ -1,4 +1,5 @@
-CREATE TABLE IF NOT EXISTS test_table (
-    id BIGINT PRIMARY KEY,
-    name VARCHAR(255) NOT NULL
+CREATE TABLE IF NOT EXISTS mpa_rating (
+    id INT PRIMARY KEY,
+    name VARCHAR(10) NOT NULL,
+    comment VARCHAR(255)
 );

@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import ru.yandex.practicum.filmorate.controller.UserController;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.model.FriendshipStatus;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.UserService;
 import ru.yandex.practicum.filmorate.storage.InMemoryUserStorage;
@@ -114,10 +115,10 @@ class UserControllerTest {
         User createdSecondUser = userController.postUser(secondUser);
 
         userController.addFriend(createdFirstUser.getId(), createdSecondUser.getId());
-        assertEquals(1, createdFirstUser.getFriends().size());
-        assertEquals(1, createdSecondUser.getFriends().size());
-        assertTrue(createdSecondUser.getFriends().contains(createdFirstUser.getId()));
-        assertTrue(createdFirstUser.getFriends().contains(createdSecondUser.getId()));
+        assertEquals(0, createdSecondUser.getFriends().size());
+        assertTrue(createdFirstUser.getFriends().containsKey(createdSecondUser.getId()));
+        assertEquals(FriendshipStatus.UNCONFIRMED, createdFirstUser.getFriends().get(createdSecondUser.getId()));
+        assertFalse(createdSecondUser.getFriends().containsKey(createdFirstUser.getId()));
     }
 
     @Test
@@ -141,8 +142,8 @@ class UserControllerTest {
 
         assertEquals(0, createdFirstUser.getFriends().size());
         assertEquals(0, createdSecondUser.getFriends().size());
-        assertFalse(createdSecondUser.getFriends().contains(createdFirstUser.getId()));
-        assertFalse(createdFirstUser.getFriends().contains(createdSecondUser.getId()));
+        assertNull(createdSecondUser.getFriends().get(createdFirstUser.getId()));
+        assertNull(createdFirstUser.getFriends().get(createdSecondUser.getId()));
     }
 
     @Test
@@ -169,10 +170,13 @@ class UserControllerTest {
             User createdThirdUser = userController.postUser(thirdUser);
 
             userController.addFriend(createdFirstUser.getId(), createdSecondUser.getId());
+            userController.addFriend(createdSecondUser.getId(), createdFirstUser.getId());
+
             userController.addFriend(createdThirdUser.getId(), createdSecondUser.getId());
+            userController.addFriend(createdSecondUser.getId(), createdThirdUser.getId());
 
             assertEquals(List.of(createdSecondUser),
-                    userController.getCommonFriends(createdFirstUser.getId(), createdThirdUser.getId()));
+                userController.getCommonFriends(createdFirstUser.getId(), createdThirdUser.getId()));
     }
 
     @Test
