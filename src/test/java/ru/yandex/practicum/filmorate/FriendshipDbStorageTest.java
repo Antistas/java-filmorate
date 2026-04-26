@@ -11,8 +11,6 @@ import ru.yandex.practicum.filmorate.storage.FriendshipDbStorage;
 import ru.yandex.practicum.filmorate.storage.UserDbStorage;
 import ru.yandex.practicum.filmorate.storage.mapper.UserRowMapper;
 
-import java.time.LocalDate;
-
 import static org.assertj.core.api.Assertions.assertThat;
 
 @JdbcTest
