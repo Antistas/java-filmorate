@@ -15,7 +15,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @JdbcTest
 @AutoConfigureTestDatabase
-@Import({FriendshipDbStorage.class, UserRowMapper.class})
+@Import({
+        FriendshipDbStorage.class,
+        UserDbStorage.class,
+        UserRowMapper.class
+})
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 class FriendshipDbStorageTest {
 
