@@ -68,4 +68,12 @@ public class UserDbStorage implements UserStorage {
         List<User> users = jdbcTemplate.query("SELECT * FROM users WHERE id = ?", userRowMapper, id);
         return users.stream().findFirst();
     }
+
+    @Override
+    public boolean checkEmailDublication(Long userId, String email) {
+        String sql = "SELECT COUNT(*) FROM users WHERE id <> ? AND email = ?";
+        Integer count = jdbcTemplate.queryForObject(sql, Integer.class, userId, email);
+        return count != null && count > 0;
+    }
+
 }

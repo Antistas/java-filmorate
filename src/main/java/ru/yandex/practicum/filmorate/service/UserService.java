@@ -12,7 +12,6 @@ import ru.yandex.practicum.filmorate.storage.interfaces.UserStorage;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 @Slf4j
@@ -116,10 +115,8 @@ public class UserService {
     }
 
     public void checkEmailDuplication(User user) {
-        boolean emailExists = userStorage.findAll().stream()
-                .anyMatch(u -> u.getEmail().equals(user.getEmail())
-                        && (user.getId() == null || !u.getId().equals(user.getId())));
 
+        boolean emailExists = userStorage.checkEmailDublication(user.getId(), user.getEmail());
         if (emailExists) {
             throw new ValidationException("Этот Email " + user.getEmail() + " уже используется");
         }

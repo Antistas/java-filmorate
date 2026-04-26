@@ -89,4 +89,17 @@ public class FilmDbStorage implements FilmStorage {
         List<Film> films = jdbcTemplate.query(sql, filmRowMapper, id);
         return films.stream().findFirst();
     }
+
+    @Override
+    public List<Film> getPopularFilms(int count) {
+        String sql = """
+            SELECT f.* FROM films f
+            LEFT JOIN film_like fl ON fl.film_id = f.id
+            GROUP BY f.id
+            ORDER BY COUNT(fl.user_id) DESC
+            LIMIT ?
+            """;
+
+        return jdbcTemplate.query(sql, filmRowMapper, count);
+    }
 }

@@ -15,4 +15,6 @@ public interface UserStorage {
     Collection<User> findAll();
 
     Optional<User> findById(Long id);
+
+    boolean checkEmailDublication(Long id, String email);
 }

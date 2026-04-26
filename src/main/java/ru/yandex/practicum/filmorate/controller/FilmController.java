@@ -7,6 +7,8 @@ import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
+import ru.yandex.practicum.filmorate.service.GenreService;
+import ru.yandex.practicum.filmorate.service.MpaService;
 
 import java.time.LocalDate;
 import java.util.Collection;
@@ -21,6 +23,8 @@ public class FilmController {
     private static final LocalDate CINEMA_BIRTHDAY = LocalDate.of(1895, 12, 28);
 
     private final FilmService filmService;
+    private final MpaService mpaService;
+    private final GenreService genreService;
 
     @GetMapping
     public Collection<Film> getFilms() {
@@ -74,6 +78,14 @@ public class FilmController {
         if (film.getReleaseDate() == null || film.getReleaseDate().isBefore(CINEMA_BIRTHDAY)) {
             log.warn("Ошибка валидации даты релиза: {}", film.getReleaseDate());
             throw new ValidationException("Дата релиза не может быть раньше 28 декабря 1895 года");
+        }
+
+        if (film.getMpa() != null || film.getMpa().getId() != null) {
+            mpaService.findById(film.getMpa().getId());
+        }
+
+        if (film.getGenres() != null && !film.getGenres().isEmpty()) {
+            film.getGenres().forEach(genre -> genreService.findById(genre.getId()));
         }
     }
 }

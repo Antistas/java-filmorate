@@ -5,10 +5,7 @@ import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.interfaces.FilmStorage;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 @Component
 @Qualifier("inMemoryFilmStorage")
@@ -46,5 +43,14 @@ public class InMemoryFilmStorage implements FilmStorage {
                 .max()
                 .orElse(0);
         return ++currentMaxId;
+    }
+
+    @Override
+    public List<Film> getPopularFilms(int count) {
+
+        return films.values().stream()
+                .sorted(Comparator.comparingInt((Film film) -> film.getLikes().size()).reversed())
+                .limit(count)
+                .toList();
     }
 }

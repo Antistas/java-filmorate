@@ -9,6 +9,7 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.MpaRating;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.interfaces.FilmStorage;
+import ru.yandex.practicum.filmorate.storage.interfaces.LikeStorage;
 
 import java.util.*;
 
@@ -20,16 +21,19 @@ public class FilmService {
     private final FilmStorage filmStorage;
     private final GenreService genreService;
     private final MpaService mpaService;
+    private final LikeStorage likeStorage;
 
     public FilmService(
             UserService userService,
             @Qualifier("filmDbStorage") FilmStorage filmStorage,
             GenreService genreService,
-            MpaService mpaService) {
+            MpaService mpaService,
+            LikeStorage likeStorage) {
         this.filmStorage = filmStorage;
         this.userService = userService;
         this.genreService = genreService;
         this.mpaService = mpaService;
+        this.likeStorage = likeStorage;
     }
 
     public Collection<Film> findAll() {
@@ -52,15 +56,15 @@ public class FilmService {
     }
 
     public void addLike(Long filmId, Long userId) {
-        Film film = getFilmOrThrow(filmId);
-        User user = getUserOrThrow(userId);
-        film.getLikes().add(user.getId());
+        getFilmOrThrow(filmId);
+        getUserOrThrow(userId);
+        likeStorage.addLike(filmId, userId);
     }
 
     public void removeLike(Long filmId, Long userId) {
-        Film film = getFilmOrThrow(filmId);
-        User user = getUserOrThrow(userId);
-        film.getLikes().remove(user.getId());
+        getFilmOrThrow(filmId);
+        getUserOrThrow(userId);
+        likeStorage.removeLike(filmId, userId);
     }
 
     public List<Film> getPopularFilms(int count) {
@@ -68,10 +72,7 @@ public class FilmService {
             throw new IllegalArgumentException("Количество фильмов должно быть больше нуля");
         }
 
-        return filmStorage.findAll().stream()
-                .sorted(Comparator.comparingInt((Film film) -> film.getLikes().size()).reversed())
-                .limit(count)
-                .toList();
+        return filmStorage.getPopularFilms(count);
     }
 
     private Film getFilmOrThrow(Long filmId) {
