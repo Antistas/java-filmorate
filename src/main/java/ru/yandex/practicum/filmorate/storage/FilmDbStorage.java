@@ -96,7 +96,7 @@ public class FilmDbStorage implements FilmStorage {
             SELECT f.* FROM films f
             LEFT JOIN film_like fl ON fl.film_id = f.id
             GROUP BY f.id
-            ORDER BY COUNT(fl.user_id) DESC
+            ORDER BY COUNT(fl.user_id) DESC, f.id ASC
             LIMIT ?
             """;
 
