@@ -1,33 +1,44 @@
 package ru.yandex.practicum.filmorate.service;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.MpaRating;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.storage.FilmStorage;
+import ru.yandex.practicum.filmorate.storage.interfaces.FilmStorage;
 
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class FilmService {
 
-    private final FilmStorage filmStorage;
     private final UserService userService;
+    private final FilmStorage filmStorage;
+    private final GenreService genreService;
+    private final MpaService mpaService;
+
+    public FilmService(
+            UserService userService,
+            @Qualifier("filmDbStorage") FilmStorage filmStorage,
+            GenreService genreService,
+            MpaService mpaService) {
+        this.filmStorage = filmStorage;
+        this.userService = userService;
+        this.genreService = genreService;
+        this.mpaService = mpaService;
+    }
 
     public Collection<Film> findAll() {
         return filmStorage.findAll();
     }
 
     public Film create(Film film) {
-        return filmStorage.create(film);
+        Film createdFilm = filmStorage.create(film);
+        return findById(createdFilm.getId());
     }
 
     public Film update(Film film) {
@@ -74,5 +85,15 @@ public class FilmService {
     // приходится дублировать, так как мы обращаемся только storage
     private User getUserOrThrow(Long userId) {
         return userService.findById(userId);
+    }
+
+    public Film findById(Long filmId) {
+        Film film = getFilmOrThrow(filmId);
+        film.setGenres(new LinkedHashSet<>(genreService.getGenresByFilmId(filmId)));
+        if (film.getMpa() != null) {
+            MpaRating fullMpa = mpaService.findById(film.getMpa().getId());
+            film.setMpa(fullMpa);
+        }
+        return film;
     }
 }

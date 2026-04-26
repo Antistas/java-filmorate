@@ -8,11 +8,14 @@ import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.FilmService;
+import ru.yandex.practicum.filmorate.service.GenreService;
 import ru.yandex.practicum.filmorate.service.UserService;
-import ru.yandex.practicum.filmorate.storage.FilmStorage;
+import ru.yandex.practicum.filmorate.storage.GenreDbStorage;
+import ru.yandex.practicum.filmorate.storage.interfaces.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.InMemoryFilmStorage;
 import ru.yandex.practicum.filmorate.storage.InMemoryUserStorage;
-import ru.yandex.practicum.filmorate.storage.UserStorage;
+import ru.yandex.practicum.filmorate.storage.interfaces.GenreStorage;
+import ru.yandex.practicum.filmorate.storage.interfaces.UserStorage;
 
 import java.time.LocalDate;
 
@@ -29,7 +32,8 @@ public class FilmControllerTest {
         UserStorage userStorage = new InMemoryUserStorage();
 
         UserService userService = new UserService(userStorage);
-        FilmService filmService = new FilmService(filmStorage, userService);
+        GenreService genreService = new GenreService(genreStorage);
+        FilmService filmService = new FilmService(userService, filmStorage, genreService);
 
         filmController = new FilmController(filmService);
         userController = new UserController(userService);

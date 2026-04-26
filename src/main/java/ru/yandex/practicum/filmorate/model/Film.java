@@ -17,7 +17,7 @@ public class Film {
 
     private Set<Genre> genres = new HashSet<>();
 
-    private MpaRating mpaRating;
+    private MpaRating mpa;
 
     @NotBlank(message = "Название фильма не может быть пустым")
     String name;
