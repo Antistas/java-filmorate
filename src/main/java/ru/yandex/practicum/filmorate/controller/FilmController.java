@@ -9,7 +9,6 @@ import ru.yandex.practicum.filmorate.service.FilmService;
 import ru.yandex.practicum.filmorate.service.GenreService;
 import ru.yandex.practicum.filmorate.service.MpaService;
 
-import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
 
