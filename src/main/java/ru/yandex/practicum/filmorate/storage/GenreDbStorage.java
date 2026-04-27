@@ -15,6 +15,8 @@ import java.sql.Statement;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Component
 @Qualifier("genreDbStorage")
@@ -67,5 +69,16 @@ public class GenreDbStorage implements GenreStorage {
         return jdbcTemplate.query(
                 "SELECT g.id, g.name FROM genres g INNER JOIN film_genre fg ON fg.genre_id = g.id " +
                         "WHERE fg.film_id = ?", genreRowMapper, id);
+    }
+
+    @Override
+    public List<Genre> findAllByIds(Set<Long> ids) {
+
+        String placeholders = ids.stream()
+                .map(id -> "?")
+                .collect(Collectors.joining(", "));
+
+        String sql = "SELECT id, name FROM genres WHERE id IN (" + placeholders + ")";
+        return jdbcTemplate.query(sql, genreRowMapper, ids.toArray());
     }
 }

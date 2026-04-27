@@ -6,12 +6,15 @@ import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.MpaRating;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.interfaces.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.interfaces.LikeStorage;
 
+import java.time.LocalDate;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -22,6 +25,8 @@ public class FilmService {
     private final GenreService genreService;
     private final MpaService mpaService;
     private final LikeStorage likeStorage;
+
+    private static final LocalDate CINEMA_BIRTHDAY = LocalDate.of(1895, 12, 28);
 
     public FilmService(
             UserService userService,
@@ -41,6 +46,9 @@ public class FilmService {
     }
 
     public Film create(Film film) {
+        validateMpa(film);
+        validateGenres(film);
+        validateReleaseDate(film);
         Film createdFilm = filmStorage.create(film);
         return findById(createdFilm.getId());
     }
@@ -50,8 +58,10 @@ public class FilmService {
             log.warn("Передан пустой ID {}", film.getId());
             throw new ValidationException("Id должен быть указан");
         }
-
         getFilmOrThrow(film.getId());
+        validateMpa(film);
+        validateGenres(film);
+        validateReleaseDate(film);
         return filmStorage.update(film);
     }
 
@@ -89,12 +99,41 @@ public class FilmService {
     }
 
     public Film findById(Long filmId) {
-        Film film = getFilmOrThrow(filmId);
-        film.setGenres(new LinkedHashSet<>(genreService.getGenresByFilmId(filmId)));
-        if (film.getMpa() != null) {
-            MpaRating fullMpa = mpaService.findById(film.getMpa().getId());
-            film.setMpa(fullMpa);
+        return getFilmOrThrow(filmId);
+    }
+
+    private void validateMpa(Film film) {
+        if (film.getMpa() == null && film.getMpa().getId() == null) {
+            throw new ValidationException("MPA должен быть указан");
         }
-        return film;
+
+        mpaService.findById(film.getMpa().getId());
+
+    }
+
+    private void validateReleaseDate(Film film) {
+        if (film.getReleaseDate() == null || film.getReleaseDate().isBefore(CINEMA_BIRTHDAY)) {
+            log.warn("Ошибка валидации даты релиза: {}", film.getReleaseDate());
+            throw new ValidationException("Дата релиза не может быть раньше 28 декабря 1895 года");
+        }
+    }
+
+    private void validateGenres(Film film) {
+        if (film.getGenres() == null || film.getGenres().isEmpty()) {
+            // тесты подразумевают что может быть фильм без жанра
+            // Genre -> Film get without genre
+            return;
+        }
+
+        Set<Long> genreIds = film.getGenres().stream()
+                .map(Genre::getId)
+                .collect(Collectors.toSet());
+
+        List<Genre> existingGenres = genreService.findAllByIds(genreIds);
+
+        if (existingGenres.size() != genreIds.size()) {
+            throw new NotFoundException("Один или несколько жанров не найдены");
+        }
+
     }
 }
