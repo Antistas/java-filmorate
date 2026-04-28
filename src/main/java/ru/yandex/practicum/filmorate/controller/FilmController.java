@@ -4,11 +4,9 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
 
-import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
 
@@ -18,8 +16,6 @@ import java.util.List;
 @RequiredArgsConstructor
 public class FilmController {
 
-    private static final LocalDate CINEMA_BIRTHDAY = LocalDate.of(1895, 12, 28);
-
     private final FilmService filmService;
 
     @GetMapping
@@ -28,10 +24,15 @@ public class FilmController {
         return filmService.findAll();
     }
 
+    @GetMapping("/{id}")
+    public Film getFilmById(@PathVariable Long id) {
+        log.info("Получен запрос на вывод фильма id = {}", id);
+        return filmService.findById(id);
+    }
+
     @PostMapping
     public Film postFilm(@Valid @RequestBody Film film) {
         log.info("Получен запрос на создание фильма: {}", film);
-        validate(film);
         Film createdFilm = filmService.create(film);
         log.info("Создан фильм {}", createdFilm);
         return createdFilm;
@@ -40,7 +41,6 @@ public class FilmController {
     @PutMapping
     public Film updateFilm(@Valid @RequestBody Film film) {
         log.info("Получен запрос на обновление фильма: {}", film);
-        validate(film);
         filmService.update(film);
         log.info("Обновлён фильм {}", film);
         return film;
@@ -62,12 +62,5 @@ public class FilmController {
     public List<Film> getPopularFilms(@RequestParam(defaultValue = "10") int count) {
         log.info("Получен запрос на вывод топ-{} фильмов", count);
         return filmService.getPopularFilms(count);
-    }
-
-    private void validate(Film film) {
-        if (film.getReleaseDate() == null || film.getReleaseDate().isBefore(CINEMA_BIRTHDAY)) {
-            log.warn("Ошибка валидации даты релиза: {}", film.getReleaseDate());
-            throw new ValidationException("Дата релиза не может быть раньше 28 декабря 1895 года");
-        }
     }
 }

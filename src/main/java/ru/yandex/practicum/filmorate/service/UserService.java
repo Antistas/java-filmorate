@@ -1,12 +1,14 @@
 package ru.yandex.practicum.filmorate.service;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.model.FriendshipStatus;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.storage.UserStorage;
+import ru.yandex.practicum.filmorate.storage.interfaces.FriendshipStorage;
+import ru.yandex.practicum.filmorate.storage.interfaces.UserStorage;
 
 import java.util.Collection;
 import java.util.List;
@@ -14,10 +16,17 @@ import java.util.Optional;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class UserService {
 
     private final UserStorage userStorage;
+    private final FriendshipStorage friendshipStorage;
+
+    public UserService(
+            @Qualifier("userDbStorage") UserStorage userStorage,
+            @Qualifier("friendshipDbStorage") FriendshipStorage friendshipStorage) {
+        this.friendshipStorage = friendshipStorage;
+        this.userStorage = userStorage;
+    }
 
     public Collection<User> findAll() {
         return userStorage.findAll();
@@ -41,37 +50,42 @@ public class UserService {
         return getUserOrThrow(id);
     }
 
-    public void addFriend(Long userId, Long friendId) {
+    public boolean addFriend(Long userId, Long friendId) {
 
         if (userId.equals(friendId)) {
             throw new ValidationException("Нельзя самого себя добавить в друзья");
         }
 
-        User user = getUserOrThrow(userId);
-        User friend = getUserOrThrow(friendId);
+        getUserOrThrow(userId);
+        getUserOrThrow(friendId);
+        boolean result;
 
-        user.getFriends().add(friendId);
-        friend.getFriends().add(userId);
+        if (friendshipStorage.isFriend(friendId, userId)) {
+            log.info("Подтверждена взаимная дружба {} с {}", friendId, userId);
+            result = friendshipStorage.addFriend(userId, friendId, FriendshipStatus.CONFIRMED);
+            friendshipStorage.updateFriendshipStatus(friendId, userId, FriendshipStatus.CONFIRMED);
+        } else {
+            log.info("Одностороняя дружба {} с {}", userId, friendId);
+            result = friendshipStorage.addFriend(userId, friendId, FriendshipStatus.UNCONFIRMED);
+        }
+
+        return result;
     }
 
     public List<User> getFriends(Long userId) {
-        return getUserOrThrow(userId).getFriends()
-                .stream()
-                .map(userStorage::findById)
-                .flatMap(Optional::stream)
-                .toList();
+        getUserOrThrow(userId);
+        return friendshipStorage.getFriends(userId);
     }
 
-    public void removeFriend(Long userId, Long friendId) {
+    public boolean removeFriend(Long userId, Long friendId) {
         if (userId.equals(friendId)) {
             throw new ValidationException("Нельзя самого себя удалить из друзей");
         }
 
-        User user = getUserOrThrow(userId);
-        User friend = getUserOrThrow(friendId);
+        getUserOrThrow(userId);
+        getUserOrThrow(friendId);
 
-        user.getFriends().remove(friendId);
-        friend.getFriends().remove(userId);
+        return friendshipStorage.removeFriend(userId, friendId);
     }
 
     public List<User> getCommonFriends(Long userId, Long otherId) {
@@ -80,14 +94,10 @@ public class UserService {
             throw new ValidationException("Нельзя у самого себя искать общих друзей");
         }
 
-        User user = getUserOrThrow(userId);
-        User otherUser = getUserOrThrow(otherId);
+        getUserOrThrow(userId);
+        getUserOrThrow(otherId);
 
-        return user.getFriends().stream()
-                .filter(otherUser.getFriends()::contains)
-                .map(userStorage::findById)
-                .flatMap(Optional::stream)
-                .toList();
+        return friendshipStorage.getCommonFriends(userId, otherId);
     }
 
     private User getUserOrThrow(Long userId) {
@@ -105,10 +115,8 @@ public class UserService {
     }
 
     public void checkEmailDuplication(User user) {
-        boolean emailExists = userStorage.findAll().stream()
-                .anyMatch(u -> u.getEmail().equals(user.getEmail())
-                        && (user.getId() == null || !u.getId().equals(user.getId())));
 
+        boolean emailExists = userStorage.checkEmailDublication(user.getId(), user.getEmail());
         if (emailExists) {
             throw new ValidationException("Этот Email " + user.getEmail() + " уже используется");
         }

@@ -1,7 +1,6 @@
-package ru.yandex.practicum.filmorate.storage;
+package ru.yandex.practicum.filmorate.storage.interfaces;
 
 import ru.yandex.practicum.filmorate.model.User;
-
 import java.util.Collection;
 import java.util.Optional;
 
@@ -13,4 +12,6 @@ public interface UserStorage {
     Collection<User> findAll();
 
     Optional<User> findById(Long id);
+
+    boolean checkEmailDublication(Long id, String email);
 }
