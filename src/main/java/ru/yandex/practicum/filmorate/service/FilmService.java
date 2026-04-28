@@ -102,7 +102,7 @@ public class FilmService {
     }
 
     private void validateMpa(Film film) {
-        if (film.getMpa() == null && film.getMpa().getId() == null) {
+        if (film.getMpa() == null || film.getMpa().getId() == null) {
             throw new ValidationException("MPA должен быть указан");
         }
 
@@ -119,8 +119,6 @@ public class FilmService {
 
     private void validateGenres(Film film) {
         if (film.getGenres() == null || film.getGenres().isEmpty()) {
-            // тесты подразумевают что может быть фильм без жанра
-            // Genre -> Film get without genre
             return;
         }
 

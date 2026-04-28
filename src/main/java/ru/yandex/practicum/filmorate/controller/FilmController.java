@@ -19,8 +19,6 @@ import java.util.List;
 public class FilmController {
 
     private final FilmService filmService;
-    private final MpaService mpaService;
-    private final GenreService genreService;
 
     @GetMapping
     public Collection<Film> getFilms() {
